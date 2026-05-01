@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Araç Detayı | Araç Filo Yönetimi{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ vehicle.plate }} - Detay</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'vehicle_list' %}" class="btn btn-sm btn-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Listeye Dön
+        </a>
+        <a href="{% url 'vehicle_update' vehicle.pk %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> Düzenle
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Genel Bilgiler</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th>Plaka:</th><td>{{ vehicle.plate }}</td></tr>
+                    <tr><th>Marka:</th><td>{{ vehicle.brand }}</td></tr>
+                    <tr><th>Model:</th><td>{{ vehicle.model }}</td></tr>
+                    <tr><th>Model Yılı:</th><td>{{ vehicle.model_year }}</td></tr>
+                    <tr><th>Bağlı Birim:</th><td>{{ vehicle.department.name|default:"Yok" }}</td></tr>
+                    <tr>
+                        <th>Durum:</th>
+                        <td>
+                            {% if vehicle.status == 'active' %}
+                                <span class="badge bg-success">Aktif</span>
+                            {% elif vehicle.status == 'service' %}
+                                <span class="badge bg-warning text-dark">Serviste</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Pasif</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Teknik Bilgiler</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th>Kilometre:</th><td>{{ vehicle.kilometer }} km</td></tr>
+                    <tr><th>Araç Tipi:</th><td>{{ vehicle.vehicle_type|default:"-" }}</td></tr>
+                    <tr><th>Yakıt Türü:</th><td>{{ vehicle.fuel_type|default:"-" }}</td></tr>
+                    <tr><th>Vites Tipi:</th><td>{{ vehicle.transmission_type|default:"-" }}</td></tr>
+                    <tr><th>Şasi No:</th><td>{{ vehicle.chassis_number|default:"-" }}</td></tr>
+                    <tr><th>Motor No:</th><td>{{ vehicle.engine_number|default:"-" }}</td></tr>
+                    <tr><th>Renk:</th><td>{{ vehicle.color|default:"-" }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">Açıklama</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ vehicle.description|default:"Açıklama bulunmuyor."|linebreaks }}</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Araç Filo Yönetimi{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card text-white bg-primary shadow">
+            <div class="card-body">
+                <h5 class="card-title">Toplam Araç</h5>
+                <h2 class="display-4">{{ total_vehicles }}</h2>
+                <i class="bi bi-car-front-fill position-absolute" style="font-size: 3rem; right: 20px; bottom: 10px; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-white bg-success shadow">
+            <div class="card-body">
+                <h5 class="card-title">Aktif Araçlar</h5>
+                <h2 class="display-4">{{ active_vehicles }}</h2>
+                <i class="bi bi-check-circle-fill position-absolute" style="font-size: 3rem; right: 20px; bottom: 10px; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-white bg-warning shadow">
+            <div class="card-body">
+                <h5 class="card-title">Servisteki Araçlar</h5>
+                <h2 class="display-4">{{ service_vehicles }}</h2>
+                <i class="bi bi-tools position-absolute" style="font-size: 3rem; right: 20px; bottom: 10px; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -65,12 +65,74 @@
     </div>
 </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-secondary text-white">
-        <h5 class="mb-0">Açıklama</h5>
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Açıklama</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ vehicle.description|default:"Açıklama bulunmuyor."|linebreaks }}</p>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <p>{{ vehicle.description|default:"Açıklama bulunmuyor."|linebreaks }}</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-plus"></i> Yeni Döküman Ekle</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_upload" value="1">
+                    <div class="mb-3">
+                        <label class="form-label">{{ doc_form.title.label }}</label>
+                        {{ doc_form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ doc_form.file.label }}</label>
+                        {{ doc_form.file }}
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Yükle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-folder2-open"></i> Araç Dökümanları</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for doc in vehicle.documents.all %}
+                        {% if not doc.is_deleted %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ doc.title }}</strong><br>
+                                <small class="text-muted">{{ doc.created_at|date:"d.m.Y" }}</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i></a>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="document_delete" value="1">
+                                    <input type="hidden" name="document_id" value="{{ doc.pk }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <div class="p-3 text-center text-muted">Henüz döküman yüklenmemiş.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

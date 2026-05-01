@@ -100,6 +100,38 @@ class Vehicle(BaseModel):
     def __str__(self):
         return f"{self.plate} - {self.brand} {self.model}"
 
+    @property
+    def latest_inspection(self):
+        return self.inspections.order_by('-valid_until').first()
+
+    @property
+    def latest_traffic_insurance(self):
+        return self.traffic_insurances.order_by('-end_date').first()
+
+    @property
+    def latest_casco_policy(self):
+        return self.casco_policies.order_by('-end_date').first()
+
+    def _days_left(self, date_val):
+        if not date_val:
+            return None
+        return (date_val - timezone.now().date()).days
+
+    @property
+    def inspection_days_left(self):
+        inspection = self.latest_inspection
+        return self._days_left(inspection.valid_until) if inspection else None
+
+    @property
+    def insurance_days_left(self):
+        insurance = self.latest_traffic_insurance
+        return self._days_left(insurance.end_date) if insurance else None
+
+    @property
+    def casco_days_left(self):
+        casco = self.latest_casco_policy
+        return self._days_left(casco.end_date) if casco else None
+
 class VehicleAssignment(BaseModel):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='assignments')
     personnel = models.ForeignKey(Personnel, on_delete=models.CASCADE, related_name='assignments')

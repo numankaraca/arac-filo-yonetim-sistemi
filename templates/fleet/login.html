@@ -1,32 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content_no_sidebar %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow-sm mt-5">
-                <div class="card-body p-4">
-                    <h3 class="text-center mb-4">Filo Yönetimi Giriş</h3>
-                    
-                    {% if messages %}
-                        {% for message in messages %}
-                        <div class="alert alert-danger">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Kullanıcı Adı</label>
-                            {{ form.username }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Şifre</label>
-                            {{ form.password }}
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
-                    </form>
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow-lg border-0" style="border-radius: 16px;">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
+                        <i class="bi bi-car-front-fill fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Filo<span class="text-primary">Pro</span></h3>
+                    <p class="text-muted small">Yönetim paneline giriş yapın</p>
                 </div>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-danger" style="border-radius: 8px;">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-semibold small">KULLANICI ADI</label>
+                        {{ form.username }}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-semibold small">ŞİFRE</label>
+                        {{ form.password }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm" style="border-radius: 8px; font-size: 1.1rem;">
+                        Giriş Yap
+                    </button>
+                </form>
             </div>
         </div>
     </div>

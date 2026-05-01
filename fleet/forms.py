@@ -1,6 +1,15 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Vehicle, Department
+from .models import Vehicle, Department, Document
+
+class DocumentForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['title', 'file']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Ruhsat, Poliçe vb.'}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+        }
 
 class VehicleForm(forms.ModelForm):
     class Meta:

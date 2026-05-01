@@ -1,37 +1,150 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard | Araç Filo Yönetimi{% endblock %}
+{% block title %}Dashboard | FiloPro{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Dashboard</h1>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4">
+    <h1 class="h2 page-header mb-0">Genel Bakış</h1>
+    <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+        <a href="{% url 'vehicle_create' %}" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> Yeni Araç</a>
+        <a href="{% url 'department_list' %}" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-building"></i> Birimler</a>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-4 mb-md-0">
+        <div class="card shadow-sm h-100" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none;">
+            <div class="card-body position-relative overflow-hidden">
+                <h6 class="card-title opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 1px;">Toplam Araç</h6>
+                <h2 class="display-4 fw-bold mb-0">{{ total_vehicles }}</h2>
+                <i class="bi bi-car-front-fill position-absolute" style="font-size: 5rem; right: -10px; bottom: -20px; opacity: 0.15;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4 mb-md-0">
+        <div class="card shadow-sm h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
+            <div class="card-body position-relative overflow-hidden">
+                <h6 class="card-title opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 1px;">Aktif Araçlar</h6>
+                <h2 class="display-4 fw-bold mb-0">{{ active_vehicles }}</h2>
+                <i class="bi bi-check-circle-fill position-absolute" style="font-size: 5rem; right: -10px; bottom: -20px; opacity: 0.15;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none;">
+            <div class="card-body position-relative overflow-hidden">
+                <h6 class="card-title opacity-75 mb-1 text-uppercase fw-semibold" style="letter-spacing: 1px;">Servisteki Araçlar</h6>
+                <h2 class="display-4 fw-bold mb-0">{{ service_vehicles }}</h2>
+                <i class="bi bi-tools position-absolute" style="font-size: 5rem; right: -10px; bottom: -20px; opacity: 0.15;"></i>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card text-white bg-primary shadow">
-            <div class="card-body">
-                <h5 class="card-title">Toplam Araç</h5>
-                <h2 class="display-4">{{ total_vehicles }}</h2>
-                <i class="bi bi-car-front-fill position-absolute" style="font-size: 3rem; right: 20px; bottom: 10px; opacity: 0.3;"></i>
+    <!-- Yaklaşan Gün Modülü -->
+    <div class="col-xl-8 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-calendar-event text-danger me-2"></i> Yaklaşan Tarihler ve Gecikmeler</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <!-- Inspections -->
+                    {% for item in upcoming_inspections %}
+                    <a href="{% url 'vehicle_detail' item.vehicle.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <h6 class="mb-1 fw-bold">{{ item.vehicle.plate }} <span class="badge bg-secondary ms-2">Muayene</span></h6>
+                            <small class="text-muted">{{ item.vehicle.brand }} {{ item.vehicle.model }}</small>
+                        </div>
+                        <div>
+                            {% include "fleet/partials/days_left_badge.html" with days=item.days %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                    
+                    <!-- Insurances -->
+                    {% for item in upcoming_insurances %}
+                    <a href="{% url 'vehicle_detail' item.vehicle.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <h6 class="mb-1 fw-bold">{{ item.vehicle.plate }} <span class="badge bg-info text-dark ms-2">Trafik Sigortası</span></h6>
+                            <small class="text-muted">{{ item.vehicle.brand }} {{ item.vehicle.model }}</small>
+                        </div>
+                        <div>
+                            {% include "fleet/partials/days_left_badge.html" with days=item.days %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                    
+                    <!-- Casco -->
+                    {% for item in upcoming_cascos %}
+                    <a href="{% url 'vehicle_detail' item.vehicle.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <h6 class="mb-1 fw-bold">{{ item.vehicle.plate }} <span class="badge bg-primary ms-2">Kasko</span></h6>
+                            <small class="text-muted">{{ item.vehicle.brand }} {{ item.vehicle.model }}</small>
+                        </div>
+                        <div>
+                            {% include "fleet/partials/days_left_badge.html" with days=item.days %}
+                        </div>
+                    </a>
+                    {% endfor %}
+
+                    {% if not upcoming_inspections and not upcoming_insurances and not upcoming_cascos %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-check-circle" style="font-size: 2rem; color: #10b981;"></i>
+                        <p class="mt-2 mb-0 fw-medium">Yaklaşan veya gecikmiş hiçbir işlem bulunmuyor.</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card text-white bg-success shadow">
-            <div class="card-body">
-                <h5 class="card-title">Aktif Araçlar</h5>
-                <h2 class="display-4">{{ active_vehicles }}</h2>
-                <i class="bi bi-check-circle-fill position-absolute" style="font-size: 3rem; right: 20px; bottom: 10px; opacity: 0.3;"></i>
+
+    <!-- Yönetici Hızlı İşlemler Modülü -->
+    <div class="col-xl-4 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-lightning-charge text-warning me-2"></i> Yönetici İşlemleri</h5>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card text-white bg-warning shadow">
-            <div class="card-body">
-                <h5 class="card-title">Servisteki Araçlar</h5>
-                <h2 class="display-4">{{ service_vehicles }}</h2>
-                <i class="bi bi-tools position-absolute" style="font-size: 3rem; right: 20px; bottom: 10px; opacity: 0.3;"></i>
+            <div class="card-body bg-light">
+                <div class="d-grid gap-3">
+                    <a href="{% url 'vehicle_list' %}" class="btn btn-light border text-start p-3 shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+                                <i class="bi bi-car-front-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Tüm Araçları Görüntüle</h6>
+                                <small class="text-muted">Filodaki tüm araçları yönetin</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <a href="{% url 'vehicle_create' %}" class="btn btn-light border text-start p-3 shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 text-success p-2 rounded-circle me-3">
+                                <i class="bi bi-plus-circle-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Yeni Araç Ekle</h6>
+                                <small class="text-muted">Filoya yeni bir araç kaydedin</small>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'department_list' %}" class="btn btn-light border text-start p-3 shadow-sm" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 text-info p-2 rounded-circle me-3">
+                                <i class="bi bi-building fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Birim Yönetimi</h6>
+                                <small class="text-muted">Şirket departmanlarını düzenleyin</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

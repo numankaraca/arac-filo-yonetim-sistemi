@@ -92,6 +92,14 @@ def vehicle_list(request):
         vehicles = vehicles.annotate(
             latest_inspection_date=Max('inspections__valid_until')
         ).order_by(F('latest_inspection_date').asc(nulls_last=True))
+    elif sort_by == 'plate_asc':
+        vehicles = vehicles.order_by('plate')
+    elif sort_by == 'plate_desc':
+        vehicles = vehicles.order_by('-plate')
+    elif sort_by == 'km_asc':
+        vehicles = vehicles.order_by('kilometer')
+    elif sort_by == 'km_desc':
+        vehicles = vehicles.order_by('-kilometer')
     else:
         vehicles = vehicles.order_by('-created_at')
         

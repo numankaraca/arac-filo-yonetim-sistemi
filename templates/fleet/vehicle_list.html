@@ -25,6 +25,10 @@
             <select name="sort" class="form-select shadow-sm border-0 text-secondary" style="border-radius: 8px; width: 180px; flex: none;">
                 <option value="">Sıralama (Yeni)</option>
                 <option value="inspection" {% if sort_by == 'inspection' %}selected{% endif %}>Muayene (Yaklaşan)</option>
+                <option value="plate_asc" {% if sort_by == 'plate_asc' %}selected{% endif %}>Plaka (A-Z)</option>
+                <option value="plate_desc" {% if sort_by == 'plate_desc' %}selected{% endif %}>Plaka (Z-A)</option>
+                <option value="km_asc" {% if sort_by == 'km_asc' %}selected{% endif %}>Kilometre (Düşük)</option>
+                <option value="km_desc" {% if sort_by == 'km_desc' %}selected{% endif %}>Kilometre (Yüksek)</option>
             </select>
             
             <button class="btn btn-primary shadow-sm px-3 border-0" type="submit" style="border-radius: 8px;">Filtrele</button>

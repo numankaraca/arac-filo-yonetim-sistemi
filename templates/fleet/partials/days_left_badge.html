@@ -1,4 +1,7 @@
 <td class="{{ col_class|default:'' }}">
+    {% if date %}
+        <div class="small text-muted mb-1">{{ date|date:"d.m.Y" }}</div>
+    {% endif %}
     {% if days is None %}
         <span class="badge bg-secondary">Kayıt Yok</span>
     {% elif days < 0 %}

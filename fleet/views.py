@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from .models import Vehicle, Department, Document
+from .models import Vehicle, Department, Document, Inspection, TrafficInsurance, CascoPolicy, MaintenanceRecord
 from .forms import VehicleForm, DepartmentForm, LoginForm, DocumentForm
 from django.contrib import messages
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -160,8 +160,44 @@ def vehicle_create(request):
     if request.method == 'POST':
         form = VehicleForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Araç başarıyla eklendi.')
+            vehicle = form.save()
+            
+            # Related Records
+            if form.cleaned_data.get('inspection_valid_until'):
+                Inspection.objects.create(
+                    vehicle=vehicle, 
+                    date=timezone.now().date(),
+                    valid_until=form.cleaned_data['inspection_valid_until'],
+                    result='Geçti'
+                )
+            
+            if form.cleaned_data.get('insurance_end_date'):
+                TrafficInsurance.objects.create(
+                    vehicle=vehicle,
+                    policy_number='Bilinmiyor',
+                    company='Bilinmiyor',
+                    start_date=timezone.now().date(),
+                    end_date=form.cleaned_data['insurance_end_date']
+                )
+                
+            if form.cleaned_data.get('casco_end_date'):
+                CascoPolicy.objects.create(
+                    vehicle=vehicle,
+                    policy_number='Bilinmiyor',
+                    company='Bilinmiyor',
+                    start_date=timezone.now().date(),
+                    end_date=form.cleaned_data['casco_end_date']
+                )
+                
+            if form.cleaned_data.get('last_maintenance_date') or form.cleaned_data.get('last_maintenance_km'):
+                MaintenanceRecord.objects.create(
+                    vehicle=vehicle,
+                    date=form.cleaned_data.get('last_maintenance_date') or timezone.now().date(),
+                    kilometer=form.cleaned_data.get('last_maintenance_km') or vehicle.kilometer,
+                    title='Periyodik Bakım'
+                )
+
+            messages.success(request, 'Araç ve ilgili kayıtlar başarıyla eklendi.')
             return redirect('vehicle_list')
     else:
         form = VehicleForm()
@@ -173,11 +209,63 @@ def vehicle_update(request, pk):
     if request.method == 'POST':
         form = VehicleForm(request.POST, instance=vehicle)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Araç başarıyla güncellendi.')
+            vehicle = form.save()
+            
+            # Update Related Records (Simple version: Create new or update latest)
+            if form.cleaned_data.get('inspection_valid_until'):
+                insp = vehicle.inspections.last()
+                if insp:
+                    insp.valid_until = form.cleaned_data['inspection_valid_until']
+                    insp.save()
+                else:
+                    Inspection.objects.create(vehicle=vehicle, date=timezone.now().date(), valid_until=form.cleaned_data['inspection_valid_until'], result='Geçti')
+            
+            if form.cleaned_data.get('insurance_end_date'):
+                insur = vehicle.traffic_insurances.last()
+                if insur:
+                    insur.end_date = form.cleaned_data['insurance_end_date']
+                    insur.save()
+                else:
+                    TrafficInsurance.objects.create(vehicle=vehicle, policy_number='Bilinmiyor', company='Bilinmiyor', start_date=timezone.now().date(), end_date=form.cleaned_data['insurance_end_date'])
+            
+            if form.cleaned_data.get('casco_end_date'):
+                casco = vehicle.casco_policies.last()
+                if casco:
+                    casco.end_date = form.cleaned_data['casco_end_date']
+                    casco.save()
+                else:
+                    CascoPolicy.objects.create(vehicle=vehicle, policy_number='Bilinmiyor', company='Bilinmiyor', start_date=timezone.now().date(), end_date=form.cleaned_data['casco_end_date'])
+            
+            if form.cleaned_data.get('last_maintenance_date') or form.cleaned_data.get('last_maintenance_km'):
+                maint = vehicle.maintenance_records.last()
+                if maint:
+                    if form.cleaned_data.get('last_maintenance_date'): maint.date = form.cleaned_data['last_maintenance_date']
+                    if form.cleaned_data.get('last_maintenance_km'): maint.kilometer = form.cleaned_data['last_maintenance_km']
+                    maint.save()
+                else:
+                    MaintenanceRecord.objects.create(vehicle=vehicle, date=form.cleaned_data.get('last_maintenance_date') or timezone.now().date(), kilometer=form.cleaned_data.get('last_maintenance_km') or vehicle.kilometer, title='Periyodik Bakım')
+
+            messages.success(request, 'Araç ve kayıtlar başarıyla güncellendi.')
             return redirect('vehicle_detail', pk=vehicle.pk)
     else:
-        form = VehicleForm(instance=vehicle)
+        # Prepopulate initial data
+        initial_data = {}
+        last_insp = vehicle.inspections.last()
+        if last_insp: initial_data['inspection_valid_until'] = last_insp.valid_until
+        
+        last_insur = vehicle.traffic_insurances.last()
+        if last_insur: initial_data['insurance_end_date'] = last_insur.end_date
+        
+        last_casco = vehicle.casco_policies.last()
+        if last_casco: initial_data['casco_end_date'] = last_casco.end_date
+        
+        last_maint = vehicle.maintenance_records.last()
+        if last_maint:
+            initial_data['last_maintenance_date'] = last_maint.date
+            initial_data['last_maintenance_km'] = last_maint.kilometer
+            
+        form = VehicleForm(instance=vehicle, initial=initial_data)
+        
     return render(request, 'fleet/vehicle_form.html', {'form': form, 'title': 'Araç Düzenle', 'vehicle': vehicle})
 
 @login_required

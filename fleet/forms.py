@@ -39,6 +39,33 @@ class VehicleForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
+    # Ekstra Alanlar (İlişkili modeller için)
+    inspection_valid_until = forms.DateField(
+        label="Muayene Geçerlilik Tarihi",
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    insurance_end_date = forms.DateField(
+        label="Trafik Sigortası Bitiş Tarihi",
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    casco_end_date = forms.DateField(
+        label="Kasko Bitiş Tarihi",
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    last_maintenance_date = forms.DateField(
+        label="Son Bakım Tarihi",
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    last_maintenance_km = forms.IntegerField(
+        label="Son Bakım Kilometresi",
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Örn: 15000'})
+    )
+
     def clean_plate(self):
         plate = self.cleaned_data.get('plate', '').strip().upper()
         if not re.match(r'^[0-9].*[0-9]$', plate):

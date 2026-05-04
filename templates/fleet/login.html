@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content_no_sidebar %}
 <div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
@@ -6,11 +7,9 @@
         <div class="card shadow-lg border-0" style="border-radius: 16px;">
             <div class="card-body p-5">
                 <div class="text-center mb-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
-                        <i class="bi bi-car-front-fill fs-2"></i>
-                    </div>
-                    <h3 class="fw-bold text-dark">Araç Yönetimi</h3>
-                    <p class="text-muted small">Yönetim paneline giriş yapın</p>
+                    <img src="{% static 'fleet/img/logo.png' %}" alt="Logo" class="img-fluid mb-4" style="max-height: 120px;">
+                    <h4 class="fw-bold text-dark mb-1">İstanbul İl Göç İdaresi</h4>
+                    <p class="text-primary fw-semibold small">Araç Yönetim Sistemi</p>
                 </div>
                 
                 {% if messages %}

@@ -128,9 +128,9 @@
                     {% endif %}
                 </td>
 
-                {% include "fleet/partials/days_left_badge.html" with days=vehicle.inspection_days_left col_class="col-inspection" %}
-                {% include "fleet/partials/days_left_badge.html" with days=vehicle.insurance_days_left col_class="col-insurance" %}
-                {% include "fleet/partials/days_left_badge.html" with days=vehicle.casco_days_left col_class="col-casco" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.inspection_days_left date=vehicle.latest_inspection.valid_until col_class="col-inspection" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.insurance_days_left date=vehicle.latest_traffic_insurance.end_date col_class="col-insurance" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.casco_days_left date=vehicle.latest_casco_policy.end_date col_class="col-casco" %}
 
                 <td class="col-status">
                     {% if vehicle.status == 'active' %}

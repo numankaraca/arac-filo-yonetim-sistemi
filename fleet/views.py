@@ -87,9 +87,13 @@ def vehicle_list(request):
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
     sort_by = request.GET.get('sort', '')
+    department_id = request.GET.get('department_id', '')
     
     vehicles = Vehicle.objects.all()
     
+    if department_id:
+        vehicles = vehicles.filter(department_id=department_id)
+        
     if query:
         vehicles = vehicles.filter(
             Q(plate__icontains=query) |

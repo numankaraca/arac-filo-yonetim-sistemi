@@ -41,6 +41,7 @@ def dashboard(request):
     upcoming_inspections = []
     upcoming_insurances = []
     upcoming_cascos = []
+    upcoming_maintenances = []
 
     for v in vehicles:
         ins_days = v.inspection_days_left
@@ -55,10 +56,19 @@ def dashboard(request):
         if casco_days is not None and casco_days <= 30:
             upcoming_cascos.append({'vehicle': v, 'days': casco_days})
             
-    # Sort by days left (most urgent first)
+        # Bakım hesabı: Mevcut KM - Son Bakım KM >= 9000 ise yaklaşmış say. (10.000 bakım periyodu var sayımıyla)
+        latest_m = v.latest_maintenance
+        if latest_m and v.kilometer:
+            km_diff = v.kilometer - latest_m.kilometer
+            remaining_km = 10000 - km_diff
+            if remaining_km <= 1000: # 1000 km kalmışsa veya geçmişse uyar
+                upcoming_maintenances.append({'vehicle': v, 'remaining_km': remaining_km})
+            
+    # Sort by days/km left (most urgent first)
     upcoming_inspections.sort(key=lambda x: x['days'])
     upcoming_insurances.sort(key=lambda x: x['days'])
     upcoming_cascos.sort(key=lambda x: x['days'])
+    upcoming_maintenances.sort(key=lambda x: x['remaining_km'])
     
     context = {
         'total_vehicles': total_vehicles,
@@ -67,6 +77,8 @@ def dashboard(request):
         'upcoming_inspections': upcoming_inspections,
         'upcoming_insurances': upcoming_insurances,
         'upcoming_cascos': upcoming_cascos,
+        'upcoming_maintenances': upcoming_maintenances,
+        'upcoming_count': len(upcoming_inspections) + len(upcoming_insurances) + len(upcoming_cascos) + len(upcoming_maintenances)
     }
     return render(request, 'fleet/dashboard.html', context)
 

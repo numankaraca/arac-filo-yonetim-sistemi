@@ -39,6 +39,28 @@
         </form>
 
         <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+            <div class="dropdown">
+                <button class="btn btn-secondary shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                    <i class="bi bi-layout-three-columns"></i> Sütunlar
+                </button>
+                <ul class="dropdown-menu shadow-sm" style="min-width: 200px; font-size: 0.9rem;">
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-brand" checked> Marka / Model</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-km" checked> Kilometre</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-maintenance" checked> Son Bakım</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-inspection" checked> Muayene</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-insurance" checked> Trafik Sigortası</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-casco" checked> Kasko</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-status" checked> Durum</label></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-year"> Model Yılı</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-chassis"> Şasi No</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-engine"> Motor No</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-type"> Araç Tipi</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-fuel"> Yakıt</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-transmission"> Vites</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-color"> Renk</label></li>
+                </ul>
+            </div>
             <button type="submit" form="exportForm" name="format" value="excel" class="btn btn-success shadow-sm">
                 <i class="bi bi-file-earmark-excel"></i> Excel İndir
             </button>
@@ -53,16 +75,25 @@
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="table-responsive bg-white">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
                 <thead class="table-light text-secondary" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
                 <tr>
                     <th style="width: 40px;"><input type="checkbox" id="selectAll" class="form-check-input"></th>
                     <th>Plaka</th>
-                <th>Marka / Model</th>
-                <th>Muayene</th>
-                <th>Trafik Sigortası</th>
-                <th>Kasko</th>
-                <th>Durum</th>
+                <th class="col-brand">Marka / Model</th>
+                <th class="col-km">Kilometre</th>
+                <th class="col-maintenance">Son Bakım</th>
+                <th class="col-inspection">Muayene</th>
+                <th class="col-insurance">Trafik Sigortası</th>
+                <th class="col-casco">Kasko</th>
+                <th class="col-status">Durum</th>
+                <th class="col-year d-none">Model Yılı</th>
+                <th class="col-chassis d-none">Şasi No</th>
+                <th class="col-engine d-none">Motor No</th>
+                <th class="col-type d-none">Araç Tipi</th>
+                <th class="col-fuel d-none">Yakıt</th>
+                <th class="col-transmission d-none">Vites</th>
+                <th class="col-color d-none">Renk</th>
                 <th>İşlemler</th>
             </tr>
         </thead>
@@ -70,17 +101,35 @@
             {% for vehicle in vehicles %}
             <tr>
                 <td><input type="checkbox" name="vehicle_ids" value="{{ vehicle.pk }}" form="exportForm" class="form-check-input vehicle-checkbox"></td>
-                <td><strong>{{ vehicle.plate }}</strong></td>
-                <td>
+                <td style="user-select: all;">
+                    <a href="{% url 'vehicle_detail' vehicle.pk %}" class="text-decoration-none fw-bold" style="color: var(--text-main); padding: 0.2rem 0.4rem; background-color: var(--primary-bg); border-radius: 6px;" title="Detayları Görüntüle">
+                        {{ vehicle.plate }}
+                    </a>
+                </td>
+                <td class="col-brand">
                     {{ vehicle.brand }} {{ vehicle.model }}<br>
                     <small class="text-muted">{{ vehicle.department.name|default:"Birim Yok" }}</small>
                 </td>
                 
-                {% include "fleet/partials/days_left_badge.html" with days=vehicle.inspection_days_left %}
-                {% include "fleet/partials/days_left_badge.html" with days=vehicle.insurance_days_left %}
-                {% include "fleet/partials/days_left_badge.html" with days=vehicle.casco_days_left %}
+                <td class="col-km">
+                    <span class="badge bg-light text-dark border"><i class="bi bi-speedometer2"></i> {{ vehicle.kilometer }} km</span>
+                </td>
+                <td class="col-maintenance">
+                    {% if vehicle.latest_maintenance %}
+                        <span class="badge bg-light text-secondary border" title="{{ vehicle.latest_maintenance.title }}">
+                            {{ vehicle.latest_maintenance.date|date:"d.m.Y" }}<br>
+                            <small class="text-muted">{{ vehicle.latest_maintenance.kilometer }} km</small>
+                        </span>
+                    {% else %}
+                        <span class="badge bg-light text-muted border">Kayıt Yok</span>
+                    {% endif %}
+                </td>
 
-                <td>
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.inspection_days_left col_class="col-inspection" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.insurance_days_left col_class="col-insurance" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.casco_days_left col_class="col-casco" %}
+
+                <td class="col-status">
                     {% if vehicle.status == 'active' %}
                         <span class="badge bg-success">Aktif</span>
                     {% elif vehicle.status == 'service' %}
@@ -89,6 +138,15 @@
                         <span class="badge bg-secondary">Pasif</span>
                     {% endif %}
                 </td>
+                
+                <td class="col-year d-none">{{ vehicle.model_year }}</td>
+                <td class="col-chassis d-none">{{ vehicle.chassis_number|default:"-" }}</td>
+                <td class="col-engine d-none">{{ vehicle.engine_number|default:"-" }}</td>
+                <td class="col-type d-none">{{ vehicle.vehicle_type|default:"-" }}</td>
+                <td class="col-fuel d-none">{{ vehicle.fuel_type|default:"-" }}</td>
+                <td class="col-transmission d-none">{{ vehicle.transmission_type|default:"-" }}</td>
+                <td class="col-color d-none">{{ vehicle.color|default:"-" }}</td>
+
                 <td>
                     <div class="d-flex gap-1">
                         <a href="{% url 'vehicle_detail' vehicle.pk %}" class="btn btn-sm btn-info text-white" title="Detay"><i class="bi bi-eye"></i></a>
@@ -120,6 +178,20 @@
         for (let checkbox of checkboxes) {
             checkbox.checked = this.checked;
         }
+    });
+
+    document.querySelectorAll('.col-toggle').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            let colClass = this.value;
+            let elements = document.querySelectorAll('.' + colClass);
+            elements.forEach(el => {
+                if(this.checked) {
+                    el.classList.remove('d-none');
+                } else {
+                    el.classList.add('d-none');
+                }
+            });
+        });
     });
 </script>
 {% endblock %}

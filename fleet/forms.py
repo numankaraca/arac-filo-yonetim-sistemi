@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.exceptions import ValidationError
+import re
 from .models import Vehicle, Department, Document
 
 class DocumentForm(forms.ModelForm):
@@ -36,6 +38,12 @@ class VehicleForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+    def clean_plate(self):
+        plate = self.cleaned_data.get('plate', '').strip().upper()
+        if not re.match(r'^[0-9].*[0-9]$', plate):
+            raise ValidationError("Plaka bilgisi sayıyla başlamalı ve sayıyla bitmelidir. (Örn: 34 ABC 123)")
+        return plate
 
 class DepartmentForm(forms.ModelForm):
     class Meta:

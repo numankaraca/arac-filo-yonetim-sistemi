@@ -112,6 +112,10 @@ class Vehicle(BaseModel):
     def latest_casco_policy(self):
         return self.casco_policies.order_by('-end_date').first()
 
+    @property
+    def latest_maintenance(self):
+        return self.maintenance_records.order_by('-date').first()
+
     def _days_left(self, date_val):
         if not date_val:
             return None

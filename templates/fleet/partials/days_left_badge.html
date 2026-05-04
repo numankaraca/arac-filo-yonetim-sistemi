@@ -1,4 +1,4 @@
-<td>
+<td class="{{ col_class|default:'' }}">
     {% if days is None %}
         <span class="badge bg-secondary">Kayıt Yok</span>
     {% elif days < 0 %}

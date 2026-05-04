@@ -149,10 +149,11 @@
                 Araç <span class="text-primary">Yönetimi</span>
             </a>
             {% if user.is_authenticated %}
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-4">
                 
-                <div class="dropdown me-2">
-                    <a href="#" class="text-secondary position-relative text-decoration-none" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="markNotificationsRead()">
+                <!-- Notifications Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="text-secondary position-relative text-decoration-none d-flex align-items-center" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="markNotificationsRead()">
                         <i class="bi bi-bell-fill fs-5"></i>
                         {% if fleet_notifications and not notifications_read %}
                         <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="notif-badge">
@@ -160,7 +161,7 @@
                         </span>
                         {% endif %}
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
                         <li><h6 class="dropdown-header">Süresi Geçen Araçlar</h6></li>
                         {% if fleet_notifications %}
                             {% for n in fleet_notifications %}
@@ -180,13 +181,32 @@
                     </ul>
                 </div>
 
-                <span class="nav-user-text"><i class="bi bi-person-circle text-primary"></i> Hoş geldin, {{
-                    user.username }}</span>
-                <form action="{% url 'logout' %}" method="post" class="m-0">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                        style="border-radius: 20px; padding: 4px 12px;">Çıkış</button>
-                </form>
+                <!-- User Profile Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle border-start ps-4" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-main);">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <i class="bi bi-person-fill text-primary"></i>
+                        </div>
+                        <div class="d-none d-lg-block">
+                            <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Hoş geldiniz</small>
+                            <span class="fw-bold" style="font-size: 0.9rem;">{{ user.username }}</span>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3" aria-labelledby="userDropdown">
+                        <li><h6 class="dropdown-header">Hesap İşlemleri</h6></li>
+                        <li><a class="dropdown-item d-flex align-items-center" href="#"><i class="bi bi-person me-2"></i> Profilim</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger d-flex align-items-center">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Güvenli Çıkış
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
             {% endif %}
         </div>

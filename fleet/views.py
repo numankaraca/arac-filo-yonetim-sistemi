@@ -5,6 +5,7 @@ from .models import Vehicle, Department, Document
 from .forms import VehicleForm, DepartmentForm, LoginForm, DocumentForm
 from django.contrib import messages
 from django.http import HttpResponseRedirect, HttpResponse
+from django.db.models import Q, Max, F
 import openpyxl
 from django.template.loader import get_template
 from xhtml2pdf import pisa
@@ -70,8 +71,37 @@ def dashboard(request):
 
 @login_required
 def vehicle_list(request):
-    vehicles = Vehicle.objects.all().order_by('-created_at')
-    return render(request, 'fleet/vehicle_list.html', {'vehicles': vehicles})
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    sort_by = request.GET.get('sort', '')
+    
+    vehicles = Vehicle.objects.all()
+    
+    if query:
+        vehicles = vehicles.filter(
+            Q(plate__icontains=query) |
+            Q(brand__icontains=query) |
+            Q(model__icontains=query) |
+            Q(department__name__icontains=query)
+        ).distinct()
+        
+    if status_filter in ['active', 'service', 'passive']:
+        vehicles = vehicles.filter(status=status_filter)
+        
+    if sort_by == 'inspection':
+        vehicles = vehicles.annotate(
+            latest_inspection_date=Max('inspections__valid_until')
+        ).order_by(F('latest_inspection_date').asc(nulls_last=True))
+    else:
+        vehicles = vehicles.order_by('-created_at')
+        
+    context = {
+        'vehicles': vehicles,
+        'search_query': query,
+        'status_filter': status_filter,
+        'sort_by': sort_by,
+    }
+    return render(request, 'fleet/vehicle_list.html', context)
 
 @login_required
 def vehicle_detail(request, pk):

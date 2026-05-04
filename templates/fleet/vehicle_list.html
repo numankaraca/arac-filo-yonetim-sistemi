@@ -3,15 +3,42 @@
 {% block title %}Araç Listesi | Araç Filo Yönetimi{% endblock %}
 
 {% block content %}
-<form method="post" action="{% url 'export_vehicles' %}">
-    {% csrf_token %}
+    <form id="exportForm" method="post" action="{% url 'export_vehicles' %}">
+        {% csrf_token %}
+    </form>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4">
         <h1 class="h2 page-header mb-0">Araç Listesi</h1>
+        
+        <form method="get" action="{% url 'vehicle_list' %}" class="d-flex flex-grow-1 mx-md-4 my-2 my-md-0 gap-2" style="max-width: 800px;">
+            <div class="input-group shadow-sm flex-grow-1" style="border-radius: 8px; overflow: hidden; min-width: 200px;">
+                <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-0 bg-white" placeholder="Plaka, marka, model..." aria-label="Ara">
+            </div>
+            
+            <select name="status" class="form-select shadow-sm border-0 text-secondary" style="border-radius: 8px; width: 140px; flex: none;">
+                <option value="">Durum (Tümü)</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Aktif</option>
+                <option value="service" {% if status_filter == 'service' %}selected{% endif %}>Serviste</option>
+                <option value="passive" {% if status_filter == 'passive' %}selected{% endif %}>Pasif</option>
+            </select>
+            
+            <select name="sort" class="form-select shadow-sm border-0 text-secondary" style="border-radius: 8px; width: 180px; flex: none;">
+                <option value="">Sıralama (Yeni)</option>
+                <option value="inspection" {% if sort_by == 'inspection' %}selected{% endif %}>Muayene (Yaklaşan)</option>
+            </select>
+            
+            <button class="btn btn-primary shadow-sm px-3 border-0" type="submit" style="border-radius: 8px;">Filtrele</button>
+            
+            {% if search_query or status_filter or sort_by %}
+            <a href="{% url 'vehicle_list' %}" class="btn btn-outline-danger shadow-sm d-flex align-items-center justify-content-center" title="Aramayı Temizle" style="border-radius: 8px; width: 42px; flex: none;"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+        </form>
+
         <div class="btn-toolbar mb-2 mb-md-0 gap-2">
-            <button type="submit" name="format" value="excel" class="btn btn-success shadow-sm">
+            <button type="submit" form="exportForm" name="format" value="excel" class="btn btn-success shadow-sm">
                 <i class="bi bi-file-earmark-excel"></i> Excel İndir
             </button>
-            <button type="submit" name="format" value="pdf" class="btn btn-danger shadow-sm">
+            <button type="submit" form="exportForm" name="format" value="pdf" class="btn btn-danger shadow-sm">
                 <i class="bi bi-file-earmark-pdf"></i> PDF İndir
             </button>
             <a href="{% url 'vehicle_create' %}" class="btn btn-primary shadow-sm ms-2">
@@ -38,7 +65,7 @@
         <tbody>
             {% for vehicle in vehicles %}
             <tr>
-                <td><input type="checkbox" name="vehicle_ids" value="{{ vehicle.pk }}" class="form-check-input vehicle-checkbox"></td>
+                <td><input type="checkbox" name="vehicle_ids" value="{{ vehicle.pk }}" form="exportForm" class="form-check-input vehicle-checkbox"></td>
                 <td><strong>{{ vehicle.plate }}</strong></td>
                 <td>
                     {{ vehicle.brand }} {{ vehicle.model }}<br>
@@ -62,9 +89,9 @@
                     <div class="d-flex gap-1">
                         <a href="{% url 'vehicle_detail' vehicle.pk %}" class="btn btn-sm btn-info text-white" title="Detay"><i class="bi bi-eye"></i></a>
                         <a href="{% url 'vehicle_update' vehicle.pk %}" class="btn btn-sm btn-primary" title="Düzenle"><i class="bi bi-pencil"></i></a>
-                        <form action="{% url 'vehicle_delete' vehicle.pk %}" method="post" class="d-inline" onsubmit="return confirm('Bu aracı silmek istediğinize emin misiniz?');">
+                        <form id="delete-vehicle-{{ vehicle.pk }}" action="{% url 'vehicle_delete' vehicle.pk %}" method="post" class="d-inline">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-danger" title="Sil"><i class="bi bi-trash"></i></button>
+                            <button type="button" class="btn btn-sm btn-danger" title="Sil" onclick="confirmDelete('delete-vehicle-{{ vehicle.pk }}', '{{ vehicle.plate }} plakalı aracı silmek üzeresiniz.')"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
                 </td>
@@ -81,7 +108,7 @@
         </table>
     </div>
 </div>
-</form>
+
 
 <script>
     document.getElementById('selectAll').addEventListener('change', function() {

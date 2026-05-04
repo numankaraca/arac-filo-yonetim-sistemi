@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Vehicle, Department, Document
 from .forms import VehicleForm, DepartmentForm, LoginForm, DocumentForm
 from django.contrib import messages
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.db.models import Q, Max, F
 import openpyxl
 from django.template.loader import get_template
@@ -172,6 +172,13 @@ def vehicle_delete(request, pk):
         return redirect('vehicle_list')
     return redirect('vehicle_list')
 
+    return redirect('vehicle_list')
+
+@login_required
+def mark_notifications_read(request):
+    request.session['notifications_read'] = True
+    return JsonResponse({'status': 'success'})
+
 @login_required
 def department_list(request):
     departments = Department.objects.all().order_by('name')
@@ -204,19 +211,42 @@ def export_vehicles(request):
             ws = wb.active
             ws.title = "Araçlar"
             
-            headers = ['Plaka', 'Marka / Model', 'Birim', 'Kilometre', 'Muayene', 'Trafik Sigortası', 'Kasko', 'Durum']
+            visible_columns = request.POST.get('visible_columns', '')
+            visible_cols_list = visible_columns.split(',') if visible_columns else []
+            
+            col_mapping = {
+                'col-brand': ('Marka / Model', lambda v: f"{v.brand} {v.model} ({v.department.name if v.department else 'Birim Yok'})"),
+                'col-km': ('Kilometre', lambda v: f"{v.kilometer} km"),
+                'col-maintenance': ('Son Bakım', lambda v: f"{v.latest_maintenance.date.strftime('%d.%m.%Y')} ({v.latest_maintenance.kilometer} km)" if v.latest_maintenance else 'Kayıt Yok'),
+                'col-inspection': ('Muayene', lambda v: v.latest_inspection.valid_until.strftime('%d.%m.%Y') if v.latest_inspection else 'Kayıt Yok'),
+                'col-insurance': ('Trafik Sigortası', lambda v: v.latest_traffic_insurance.end_date.strftime('%d.%m.%Y') if v.latest_traffic_insurance else 'Kayıt Yok'),
+                'col-casco': ('Kasko', lambda v: v.latest_casco_policy.end_date.strftime('%d.%m.%Y') if v.latest_casco_policy else 'Kayıt Yok'),
+                'col-status': ('Durum', lambda v: v.get_status_display()),
+                'col-year': ('Model Yılı', lambda v: v.model_year),
+                'col-chassis': ('Şasi No', lambda v: v.chassis_number if v.chassis_number else '-'),
+                'col-engine': ('Motor No', lambda v: v.engine_number if v.engine_number else '-'),
+                'col-type': ('Araç Tipi', lambda v: v.vehicle_type if v.vehicle_type else '-'),
+                'col-fuel': ('Yakıt Türü', lambda v: v.fuel_type if v.fuel_type else '-'),
+                'col-transmission': ('Vites Tipi', lambda v: v.transmission_type if v.transmission_type else '-'),
+                'col-color': ('Renk', lambda v: v.color if v.color else '-'),
+            }
+            
+            if not visible_cols_list:
+                visible_cols_list = ['col-brand', 'col-km', 'col-inspection', 'col-insurance', 'col-casco', 'col-status']
+                
+            headers = ['Plaka']
+            extractors = [lambda v: v.plate]
+            
+            for col_key in visible_cols_list:
+                if col_key in col_mapping:
+                    headers.append(col_mapping[col_key][0])
+                    extractors.append(col_mapping[col_key][1])
+            
             ws.append(headers)
             
             for v in vehicles:
-                ins = v.latest_inspection.valid_until.strftime('%d.%m.%Y') if v.latest_inspection else 'Yok'
-                traf = v.latest_traffic_insurance.end_date.strftime('%d.%m.%Y') if v.latest_traffic_insurance else 'Yok'
-                casco = v.latest_casco_policy.end_date.strftime('%d.%m.%Y') if v.latest_casco_policy else 'Yok'
-                dept = v.department.name if v.department else 'Birim Yok'
-                
-                ws.append([
-                    v.plate, f"{v.brand} {v.model}", dept, v.kilometer, 
-                    ins, traf, casco, v.get_status_display()
-                ])
+                row_data = [str(extractor(v)) for extractor in extractors]
+                ws.append(row_data)
                 
             wb.save(response)
             return response

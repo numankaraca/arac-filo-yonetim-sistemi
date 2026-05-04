@@ -5,6 +5,7 @@
 {% block content %}
     <form id="exportForm" method="post" action="{% url 'export_vehicles' %}">
         {% csrf_token %}
+        <input type="hidden" name="visible_columns" id="visibleColumnsInput">
     </form>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4">
         <h1 class="h2 page-header mb-0">Araç Listesi</h1>
@@ -61,7 +62,7 @@
                     <li><label class="dropdown-item"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-color"> Renk</label></li>
                 </ul>
             </div>
-            <button type="submit" form="exportForm" name="format" value="excel" class="btn btn-success shadow-sm">
+            <button type="submit" form="exportForm" name="format" value="excel" class="btn btn-success shadow-sm" onclick="updateExportColumns()">
                 <i class="bi bi-file-earmark-excel"></i> Excel İndir
             </button>
             <button type="submit" form="exportForm" name="format" value="pdf" class="btn btn-danger shadow-sm">
@@ -195,5 +196,15 @@
             });
         });
     });
+
+    function updateExportColumns() {
+        let visibleCols = [];
+        document.querySelectorAll('.col-toggle').forEach(checkbox => {
+            if(checkbox.checked) {
+                visibleCols.push(checkbox.value);
+            }
+        });
+        document.getElementById('visibleColumnsInput').value = visibleCols.join(',');
+    }
 </script>
 {% endblock %}

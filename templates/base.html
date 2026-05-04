@@ -150,6 +150,36 @@
             </a>
             {% if user.is_authenticated %}
             <div class="d-flex align-items-center gap-3">
+                
+                <div class="dropdown me-2">
+                    <a href="#" class="text-secondary position-relative text-decoration-none" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" onclick="markNotificationsRead()">
+                        <i class="bi bi-bell-fill fs-5"></i>
+                        {% if fleet_notifications and not notifications_read %}
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="notif-badge">
+                            <span class="visually-hidden">Yeni bildirimler</span>
+                        </span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li><h6 class="dropdown-header">Süresi Geçen Araçlar</h6></li>
+                        {% if fleet_notifications %}
+                            {% for n in fleet_notifications %}
+                            <li>
+                                <div class="dropdown-item py-2 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-dark">{{ n.plate }}</strong>
+                                        <span class="badge bg-danger rounded-pill">{{ n.days }} gün geçti</span>
+                                    </div>
+                                    <small class="text-muted"><i class="bi bi-exclamation-circle text-danger me-1"></i> {{ n.issue }} süresi doldu!</small>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li><span class="dropdown-item text-muted text-center py-3">Hiç uyarı yok.</span></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
                 <span class="nav-user-text"><i class="bi bi-person-circle text-primary"></i> Hoş geldin, {{
                     user.username }}</span>
                 <form action="{% url 'logout' %}" method="post" class="m-0">
@@ -212,6 +242,44 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function markNotificationsRead() {
+            let badge = document.getElementById('notif-badge');
+            if (badge) { badge.style.display = 'none'; }
+            fetch("{% url 'mark_notifications_read' %}", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+        }
+
+        {% if fleet_notifications and not notifications_read %}
+        document.addEventListener("DOMContentLoaded", function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+                background: '#fef2f2',
+                color: '#991b1b',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            
+            let msg = "<div style='text-align:left; font-size: 0.9rem;'>";
+            {% for n in fleet_notifications %}
+                msg += "<strong>{{ n.plate }}</strong> - {{ n.issue }} ({{ n.days }} gün)<br>";
+            {% endfor %}
+            msg += "</div>";
+
+            Toast.fire({
+                icon: 'error',
+                title: 'Dikkat! Günü Geçen İşlemler',
+                html: msg
+            });
+        });
+        {% endif %}
+
         function confirmDelete(formId, textMessage) {
             Swal.fire({
                 title: 'Silmek İstediğinize Emin Misiniz?',

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Araç Detayı | Araç Filo Yönetimi{% endblock %}
 
@@ -23,7 +24,10 @@
             </div>
             <div class="card-body">
                 <table class="table table-borderless">
-                    <tr><th>Plaka:</th><td>{{ vehicle.plate }}</td></tr>
+                    <tr><th>Plaka:</th><td><span class="badge bg-dark fs-6">{{ vehicle.plate }}</span></td></tr>
+                    {% if vehicle.official_plate %}
+                    <tr><th>Resmi Plaka:</th><td><span class="badge bg-primary fs-6">{{ vehicle.official_plate }}</span></td></tr>
+                    {% endif %}
                     <tr><th>Marka:</th><td>{{ vehicle.brand }}</td></tr>
                     <tr><th>Model:</th><td>{{ vehicle.model }}</td></tr>
                     <tr><th>Model Yılı:</th><td>{{ vehicle.model_year }}</td></tr>
@@ -52,13 +56,11 @@
             </div>
             <div class="card-body">
                 <table class="table table-borderless">
-                    <tr><th>Kilometre:</th><td>{{ vehicle.kilometer }} km</td></tr>
-                    <tr><th>Araç Tipi:</th><td>{{ vehicle.vehicle_type|default:"-" }}</td></tr>
-                    <tr><th>Yakıt Türü:</th><td>{{ vehicle.fuel_type|default:"-" }}</td></tr>
-                    <tr><th>Vites Tipi:</th><td>{{ vehicle.transmission_type|default:"-" }}</td></tr>
-                    <tr><th>Şasi No:</th><td>{{ vehicle.chassis_number|default:"-" }}</td></tr>
-                    <tr><th>Motor No:</th><td>{{ vehicle.engine_number|default:"-" }}</td></tr>
-                    <tr><th>Renk:</th><td>{{ vehicle.color|default:"-" }}</td></tr>
+                    <tr><th>Kilometre:</th><td>{{ vehicle.kilometer|intcomma }} km</td></tr>
+                    <tr><th>Son Bakım Tarihi:</th><td>{{ vehicle.latest_maintenance.date|date:"d.m.Y"|default:"Kayıt Yok" }}</td></tr>
+                    <tr><th>Muayene Geçerlilik:</th><td>{{ vehicle.latest_inspection.valid_until|date:"d.m.Y"|default:"Kayıt Yok" }}</td></tr>
+                    <tr><th>Trafik Sigortası Bitiş:</th><td>{{ vehicle.latest_traffic_insurance.end_date|date:"d.m.Y"|default:"Kayıt Yok" }}</td></tr>
+                    <tr><th>Kasko Bitiş:</th><td>{{ vehicle.latest_casco_policy.end_date|date:"d.m.Y"|default:"Kayıt Yok" }}</td></tr>
                 </table>
             </div>
         </div>

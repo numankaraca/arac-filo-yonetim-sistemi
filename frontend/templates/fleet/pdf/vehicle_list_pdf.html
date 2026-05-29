@@ -57,7 +57,12 @@
         <tbody>
             {% for v in vehicles %}
             <tr>
-                <td><strong>{{ v.plate }}</strong></td>
+                <td>
+                    <strong>{{ v.plate }}</strong>
+                    {% if v.official_plate %}
+                    <br><span style="font-size: 8.5pt; color: #555;">(Resmi: {{ v.official_plate }})</span>
+                    {% endif %}
+                </td>
                 <td>{{ v.brand }} {{ v.model }}</td>
                 <td>{{ v.department.name|default:"-" }}</td>
                 

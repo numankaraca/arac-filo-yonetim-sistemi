@@ -83,15 +83,10 @@ class Vehicle(BaseModel):
     ]
     
     plate = models.CharField(max_length=20, unique=True)
+    official_plate = models.CharField(max_length=20, blank=True, null=True, verbose_name="Resmi Plaka (Varsa)")
     brand = models.CharField(max_length=50)
     model = models.CharField(max_length=50)
-    model_year = models.IntegerField()
-    vehicle_type = models.CharField(max_length=50, blank=True, null=True)
-    fuel_type = models.CharField(max_length=30, blank=True, null=True)
-    transmission_type = models.CharField(max_length=30, blank=True, null=True)
-    chassis_number = models.CharField(max_length=100, blank=True, null=True)
-    engine_number = models.CharField(max_length=100, blank=True, null=True)
-    color = models.CharField(max_length=30, blank=True, null=True)
+    model_year = models.IntegerField(blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='vehicles')
     kilometer = models.IntegerField(default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')

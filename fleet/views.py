@@ -97,6 +97,7 @@ def vehicle_list(request):
     if query:
         vehicles = vehicles.filter(
             Q(plate__icontains=query) |
+            Q(official_plate__icontains=query) |
             Q(brand__icontains=query) |
             Q(model__icontains=query) |
             Q(department__name__icontains=query)
@@ -109,6 +110,14 @@ def vehicle_list(request):
         vehicles = vehicles.annotate(
             latest_inspection_date=Max('inspections__valid_until')
         ).order_by(F('latest_inspection_date').asc(nulls_last=True))
+    elif sort_by == 'insurance':
+        vehicles = vehicles.annotate(
+            latest_insurance_date=Max('traffic_insurances__end_date')
+        ).order_by(F('latest_insurance_date').asc(nulls_last=True))
+    elif sort_by == 'casco':
+        vehicles = vehicles.annotate(
+            latest_casco_date=Max('casco_policies__end_date')
+        ).order_by(F('latest_casco_date').asc(nulls_last=True))
     elif sort_by == 'plate_asc':
         vehicles = vehicles.order_by('plate')
     elif sort_by == 'plate_desc':
@@ -118,13 +127,21 @@ def vehicle_list(request):
     elif sort_by == 'km_desc':
         vehicles = vehicles.order_by('-kilometer')
     else:
-        vehicles = vehicles.order_by('-created_at')
+        vehicles = vehicles.order_by('created_at')
+        
+    brand_filter = request.GET.get('brand', '')
+    brands = Vehicle.objects.values_list('brand', flat=True).distinct().order_by('brand')
+    
+    if brand_filter:
+        vehicles = vehicles.filter(brand=brand_filter)
         
     context = {
         'vehicles': vehicles,
         'search_query': query,
         'status_filter': status_filter,
         'sort_by': sort_by,
+        'brands': brands,
+        'brand_filter': brand_filter,
     }
     return render(request, 'fleet/vehicle_list.html', context)
 
@@ -298,6 +315,17 @@ def department_list(request):
     return render(request, 'fleet/department_list.html', {'departments': departments, 'form': form})
 
 @login_required
+def department_delete(request, pk):
+    department = get_object_or_404(Department, pk=pk)
+    if request.method == 'POST':
+        if department.vehicles.exists():
+            messages.error(request, 'Bu birime ait araçlar olduğu için birimi silemezsiniz. Önce araçları başka birime aktarın veya silin.')
+        else:
+            department.delete()
+            messages.success(request, 'Birim başarıyla silindi.')
+    return redirect('department_list')
+
+@login_required
 def export_vehicles(request):
     if request.method == 'POST':
         vehicle_ids = request.POST.getlist('vehicle_ids')
@@ -307,6 +335,53 @@ def export_vehicles(request):
             vehicles = Vehicle.objects.filter(id__in=vehicle_ids)
         else:
             vehicles = Vehicle.objects.all()
+            
+            query = request.POST.get('q', '')
+            status_filter = request.POST.get('status', '')
+            sort_by = request.POST.get('sort', '')
+            department_id = request.POST.get('department_id', '')
+            
+            if department_id:
+                vehicles = vehicles.filter(department_id=department_id)
+                
+            if query:
+                vehicles = vehicles.filter(
+                    Q(plate__icontains=query) |
+                    Q(official_plate__icontains=query) |
+                    Q(brand__icontains=query) |
+                    Q(model__icontains=query) |
+                    Q(department__name__icontains=query)
+                ).distinct()
+                
+            if status_filter in ['active', 'service', 'passive']:
+                vehicles = vehicles.filter(status=status_filter)
+                
+            if sort_by == 'inspection':
+                vehicles = vehicles.annotate(
+                    latest_inspection_date=Max('inspections__valid_until')
+                ).order_by(F('latest_inspection_date').asc(nulls_last=True))
+            elif sort_by == 'insurance':
+                vehicles = vehicles.annotate(
+                    latest_insurance_date=Max('traffic_insurances__end_date')
+                ).order_by(F('latest_insurance_date').asc(nulls_last=True))
+            elif sort_by == 'casco':
+                vehicles = vehicles.annotate(
+                    latest_casco_date=Max('casco_policies__end_date')
+                ).order_by(F('latest_casco_date').asc(nulls_last=True))
+            elif sort_by == 'plate_asc':
+                vehicles = vehicles.order_by('plate')
+            elif sort_by == 'plate_desc':
+                vehicles = vehicles.order_by('-plate')
+            elif sort_by == 'km_asc':
+                vehicles = vehicles.order_by('kilometer')
+            elif sort_by == 'km_desc':
+                vehicles = vehicles.order_by('-kilometer')
+            else:
+                vehicles = vehicles.order_by('created_at')
+                
+            brand_filter = request.POST.get('brand', '')
+            if brand_filter:
+                vehicles = vehicles.filter(brand=brand_filter)
 
         current_date = timezone.localtime().strftime('%d.%m.%Y')
         
@@ -323,26 +398,20 @@ def export_vehicles(request):
             
             col_mapping = {
                 'col-brand': ('Marka / Model', lambda v: f"{v.brand} {v.model} ({v.department.name if v.department else 'Birim Yok'})"),
-                'col-km': ('Kilometre', lambda v: f"{v.kilometer} km"),
-                'col-maintenance': ('Son Bakım', lambda v: f"{v.latest_maintenance.date.strftime('%d.%m.%Y')} ({v.latest_maintenance.kilometer} km)" if v.latest_maintenance else 'Kayıt Yok'),
+                'col-km': ('Kilometre', lambda v: f"{v.kilometer:,} km".replace(',', '.')),
+                'col-maintenance': ('Son Bakım', lambda v: f"{v.latest_maintenance.date.strftime('%d.%m.%Y')} ({v.latest_maintenance.kilometer:,} km)".replace(',', '.') if v.latest_maintenance else 'Kayıt Yok'),
                 'col-inspection': ('Muayene', lambda v: v.latest_inspection.valid_until.strftime('%d.%m.%Y') if v.latest_inspection else 'Kayıt Yok'),
                 'col-insurance': ('Trafik Sigortası', lambda v: v.latest_traffic_insurance.end_date.strftime('%d.%m.%Y') if v.latest_traffic_insurance else 'Kayıt Yok'),
                 'col-casco': ('Kasko', lambda v: v.latest_casco_policy.end_date.strftime('%d.%m.%Y') if v.latest_casco_policy else 'Kayıt Yok'),
                 'col-status': ('Durum', lambda v: v.get_status_display()),
                 'col-year': ('Model Yılı', lambda v: v.model_year),
-                'col-chassis': ('Şasi No', lambda v: v.chassis_number if v.chassis_number else '-'),
-                'col-engine': ('Motor No', lambda v: v.engine_number if v.engine_number else '-'),
-                'col-type': ('Araç Tipi', lambda v: v.vehicle_type if v.vehicle_type else '-'),
-                'col-fuel': ('Yakıt Türü', lambda v: v.fuel_type if v.fuel_type else '-'),
-                'col-transmission': ('Vites Tipi', lambda v: v.transmission_type if v.transmission_type else '-'),
-                'col-color': ('Renk', lambda v: v.color if v.color else '-'),
             }
             
             if not visible_cols_list:
                 visible_cols_list = ['col-brand', 'col-km', 'col-inspection', 'col-insurance', 'col-casco', 'col-status']
                 
             headers = ['Plaka']
-            extractors = [lambda v: v.plate]
+            extractors = [lambda v: f"{v.plate} / Resmi: {v.official_plate}" if v.official_plate else v.plate]
             
             for col_key in visible_cols_list:
                 if col_key in col_mapping:

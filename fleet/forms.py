@@ -17,22 +17,26 @@ class VehicleForm(forms.ModelForm):
     class Meta:
         model = Vehicle
         fields = [
-            'plate', 'brand', 'model', 'model_year', 'vehicle_type', 
-            'fuel_type', 'transmission_type', 'chassis_number', 
-            'engine_number', 'color', 'department', 'kilometer', 
-            'status', 'description'
+            'plate', 'official_plate', 'brand', 'model', 'model_year',
+            'department', 'kilometer', 'status', 'description'
         ]
+        labels = {
+            'plate': 'Plaka',
+            'official_plate': 'Resmi Plaka (Varsa)',
+            'brand': 'Marka',
+            'model': 'Model',
+            'model_year': 'Model Yılı',
+            'department': 'Bağlı Olduğu Birim',
+            'kilometer': 'Kilometre',
+            'status': 'Durum',
+            'description': 'Açıklama',
+        }
         widgets = {
             'plate': forms.TextInput(attrs={'class': 'form-control'}),
+            'official_plate': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Varsa resmi plaka giriniz'}),
             'brand': forms.TextInput(attrs={'class': 'form-control'}),
             'model': forms.TextInput(attrs={'class': 'form-control'}),
             'model_year': forms.NumberInput(attrs={'class': 'form-control'}),
-            'vehicle_type': forms.TextInput(attrs={'class': 'form-control'}),
-            'fuel_type': forms.TextInput(attrs={'class': 'form-control'}),
-            'transmission_type': forms.TextInput(attrs={'class': 'form-control'}),
-            'chassis_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'engine_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'color': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.Select(attrs={'class': 'form-select'}),
             'kilometer': forms.NumberInput(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
@@ -43,22 +47,22 @@ class VehicleForm(forms.ModelForm):
     inspection_valid_until = forms.DateField(
         label="Muayene Geçerlilik Tarihi",
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'})
     )
     insurance_end_date = forms.DateField(
         label="Trafik Sigortası Bitiş Tarihi",
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'})
     )
     casco_end_date = forms.DateField(
         label="Kasko Bitiş Tarihi",
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'})
     )
     last_maintenance_date = forms.DateField(
         label="Son Bakım Tarihi",
         required=False,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'})
     )
     last_maintenance_km = forms.IntegerField(
         label="Son Bakım Kilometresi",

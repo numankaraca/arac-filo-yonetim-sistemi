@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Araç Listesi | Araç Filo Yönetimi{% endblock %}
+
+{% block content %}
+    <form id="exportForm" method="post" action="{% url 'export_vehicles' %}">
+        {% csrf_token %}
+        <input type="hidden" name="visible_columns" id="visibleColumnsInput">
+        <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
+        <input type="hidden" name="status" value="{{ request.GET.status|default:'' }}">
+        <input type="hidden" name="sort" value="{{ request.GET.sort|default:'' }}">
+        <input type="hidden" name="department_id" value="{{ request.GET.department_id|default:'' }}">
+        <input type="hidden" name="brand" value="{{ request.GET.brand|default:'' }}">
+    </form>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center pt-3 pb-3 mb-3 border-bottom">
+        <h1 class="h2 page-header mb-0">
+            <i class="bi bi-car-front-fill me-2 text-primary"></i>Araç Listesi
+        </h1>
+        <a href="{% url 'vehicle_create' %}" class="btn btn-primary shadow-sm px-4">
+            <i class="bi bi-plus-lg me-1"></i> Yeni Araç Ekle
+        </a>
+    </div>
+
+    <!-- Filter & Action Bar -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 px-3 py-2">
+        <div class="d-flex flex-wrap align-items-center gap-2 justify-content-between">
+            <!-- Filters -->
+            <form method="get" action="{% url 'vehicle_list' %}" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1" id="filterForm">
+                <!-- Search -->
+                <div class="input-group shadow-sm" style="width: 230px; border-radius: 8px; overflow: hidden;">
+                    <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-search fs-6"></i></span>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control border-0 bg-white ps-0" placeholder="Plaka, marka, birim..." aria-label="Ara" style="font-size: 0.88rem;">
+                </div>
+
+                <!-- Brand -->
+                <select name="brand" class="form-select form-select-sm shadow-sm border-0" style="width: 130px; border-radius: 8px; font-size: 0.88rem; background-color:#fff;">
+                    <option value="">Marka (Tümü)</option>
+                    {% for b in brands %}
+                    <option value="{{ b }}" {% if brand_filter == b %}selected{% endif %}>{{ b }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Status -->
+                <select name="status" class="form-select form-select-sm shadow-sm border-0" style="width: 130px; border-radius: 8px; font-size: 0.88rem; background-color:#fff;">
+                    <option value="">Durum (Tümü)</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Aktif</option>
+                    <option value="service" {% if status_filter == 'service' %}selected{% endif %}>Serviste</option>
+                    <option value="passive" {% if status_filter == 'passive' %}selected{% endif %}>Pasif</option>
+                </select>
+
+                <select name="sort" class="form-select form-select-sm shadow-sm border-0" style="width: 185px; border-radius: 8px; font-size: 0.88rem; background-color:#fff;">
+                    <option value="">Ekleme Sırası</option>
+                    <optgroup label="— Tarih Sıralaması —">
+                        <option value="inspection" {% if sort_by == 'inspection' %}selected{% endif %}>Muayene (Yaklaşan)</option>
+                        <option value="insurance" {% if sort_by == 'insurance' %}selected{% endif %}>Trafik Sigortası (Yaklaşan)</option>
+                        <option value="casco" {% if sort_by == 'casco' %}selected{% endif %}>Kasko (Yaklaşan)</option>
+                    </optgroup>
+                    <optgroup label="— Plaka —">
+                        <option value="plate_asc" {% if sort_by == 'plate_asc' %}selected{% endif %}>Plaka (A-Z)</option>
+                        <option value="plate_desc" {% if sort_by == 'plate_desc' %}selected{% endif %}>Plaka (Z-A)</option>
+                    </optgroup>
+                    <optgroup label="— Kilometre —">
+                        <option value="km_asc" {% if sort_by == 'km_asc' %}selected{% endif %}>Kilometre (Düşük)</option>
+                        <option value="km_desc" {% if sort_by == 'km_desc' %}selected{% endif %}>Kilometre (Yüksek)</option>
+                    </optgroup>
+                </select>
+
+                <button class="btn btn-primary btn-sm shadow-sm px-3" type="submit" style="border-radius: 8px; font-size: 0.88rem;">
+                    <i class="bi bi-funnel-fill me-1"></i>Filtrele
+                </button>
+
+                {% if search_query or status_filter or sort_by or brand_filter %}
+                <a href="{% url 'vehicle_list' %}" class="btn btn-sm btn-outline-danger shadow-sm d-flex align-items-center justify-content-center" title="Temizle" style="border-radius: 8px; width: 32px; height: 32px; padding: 0;">
+                    <i class="bi bi-x-lg" style="font-size: 0.8rem;"></i>
+                </a>
+                {% endif %}
+            </form>
+
+            <!-- Action Buttons -->
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <div class="vr d-none d-md-block mx-1 text-muted"></div>
+                <!-- Column toggle -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="border-radius: 8px; font-size: 0.88rem;">
+                        <i class="bi bi-layout-three-columns me-1"></i>Sütunlar
+                    </button>
+                    <ul class="dropdown-menu shadow border-0 mt-1" style="min-width: 190px; font-size: 0.88rem; border-radius: 10px;">
+                        <li><h6 class="dropdown-header text-muted" style="font-size: 0.75rem;">GÖRÜNEN SÜTUNLAR</h6></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-brand" checked> Marka / Model</label></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-km" checked> Kilometre</label></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-maintenance" checked> Son Bakım</label></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-inspection" checked> Muayene</label></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-insurance" checked> Trafik Sigortası</label></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-casco" checked> Kasko</label></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-status" checked> Durum</label></li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li><label class="dropdown-item py-1"><input type="checkbox" class="form-check-input col-toggle me-2" value="col-year"> Model Yılı</label></li>
+                    </ul>
+                </div>
+                <!-- Export buttons -->
+                <button type="button" id="toggleSelectBtn" class="btn btn-sm btn-outline-secondary shadow-sm" onclick="toggleSelectMode()" style="border-radius: 8px; font-size: 0.88rem;" title="Toplu Seçim Modu">
+                    <i class="bi bi-check2-square me-1"></i>Seç
+                </button>
+                <button type="submit" form="exportForm" name="format" value="excel" class="btn btn-sm btn-success shadow-sm" onclick="updateExportColumns()" style="border-radius: 8px; font-size: 0.88rem;">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                </button>
+                <button type="submit" form="exportForm" name="format" value="pdf" class="btn btn-sm btn-danger shadow-sm" style="border-radius: 8px; font-size: 0.88rem;">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive bg-white" style="max-height: calc(100vh - 220px); overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+                <thead class="table-light text-secondary" style="position: sticky; top: 0; z-index: 10; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                <tr>
+                    <th id="col-select-header" class="d-none" style="width: 50px; text-align: center;">
+                        <input type="checkbox" id="selectAll" class="form-check-input m-0">
+                    </th>
+                    <th>Plaka</th>
+                <th class="col-brand">Marka / Model</th>
+                <th class="col-km">Kilometre</th>
+                <th class="col-maintenance">Son Bakım</th>
+                <th class="col-inspection">Muayene</th>
+                <th class="col-insurance">Trafik Sigortası</th>
+                <th class="col-casco">Kasko</th>
+                <th class="col-status">Durum</th>
+                <th class="col-year d-none">Model Yılı</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehicle in vehicles %}
+            <tr>
+                <td id="col-select-{{ vehicle.pk }}" class="d-none" style="text-align: center; width: 50px;">
+                    <input type="checkbox" name="vehicle_ids" value="{{ vehicle.pk }}" form="exportForm" class="form-check-input vehicle-checkbox m-0">
+                </td>
+                <td style="user-select: all;">
+                    <a href="{% url 'vehicle_detail' vehicle.pk %}" class="text-decoration-none fw-bold d-inline-block" style="color: var(--text-main); padding: 0.2rem 0.4rem; background-color: var(--primary-bg); border-radius: 6px;" title="Detayları Görüntüle">
+                        {{ vehicle.plate }}
+                    </a>
+                    {% if vehicle.official_plate %}
+                    <br><span class="badge bg-primary mt-1 shadow-sm" style="font-size: 0.75rem;" title="Resmi Plaka"><i class="bi bi-star-fill text-warning me-1" style="font-size: 0.6rem;"></i>{{ vehicle.official_plate }}</span>
+                    {% endif %}
+                </td>
+                <td class="col-brand">
+                    {{ vehicle.brand }} {{ vehicle.model }}<br>
+                    <small class="text-muted">{{ vehicle.department.name|default:"Birim Yok" }}</small>
+                </td>
+                
+                <td class="col-km">
+                    <span class="badge bg-light text-dark border"><i class="bi bi-speedometer2"></i> {{ vehicle.kilometer|intcomma }} km</span>
+                </td>
+                <td class="col-maintenance">
+                    {% if vehicle.latest_maintenance %}
+                        <span class="badge bg-light text-secondary border" title="{{ vehicle.latest_maintenance.title }}">
+                            {{ vehicle.latest_maintenance.date|date:"d.m.Y" }}<br>
+                            <small class="text-muted">{{ vehicle.latest_maintenance.kilometer|intcomma }} km</small>
+                        </span>
+                    {% else %}
+                        <span class="badge bg-light text-muted border">Kayıt Yok</span>
+                    {% endif %}
+                </td>
+
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.inspection_days_left date=vehicle.latest_inspection.valid_until col_class="col-inspection" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.insurance_days_left date=vehicle.latest_traffic_insurance.end_date col_class="col-insurance" %}
+                {% include "fleet/partials/days_left_badge.html" with days=vehicle.casco_days_left date=vehicle.latest_casco_policy.end_date col_class="col-casco" %}
+
+                <td class="col-status">
+                    {% if vehicle.status == 'active' %}
+                        <span class="badge bg-success">Aktif</span>
+                    {% elif vehicle.status == 'service' %}
+                        <span class="badge bg-warning text-dark">Serviste</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pasif</span>
+                    {% endif %}
+                </td>
+                
+                <td class="col-year d-none">{{ vehicle.model_year }}</td>
+
+                <td>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle shadow-sm" type="button" id="dropdownMenuButton-{{ vehicle.pk }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="dropdownMenuButton-{{ vehicle.pk }}">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'vehicle_detail' vehicle.pk %}">
+                                    <i class="bi bi-eye text-info me-2"></i> Detay Görüntüle
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'vehicle_update' vehicle.pk %}">
+                                    <i class="bi bi-pencil text-primary me-2"></i> Düzenle
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form id="delete-vehicle-{{ vehicle.pk }}" action="{% url 'vehicle_delete' vehicle.pk %}" method="post" class="m-0 p-0">
+                                    {% csrf_token %}
+                                    <button type="button" class="dropdown-item text-danger" onclick="confirmDelete('delete-vehicle-{{ vehicle.pk }}', '{{ vehicle.plate }} plakalı aracı silmek üzeresiniz.')">
+                                        <i class="bi bi-trash me-2"></i> Sil
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="100" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                    Kayıtlı araç bulunmamaktadır.
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    document.getElementById('selectAll').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('.vehicle-checkbox');
+        for (let checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    });
+
+    let selectModeActive = false;
+    function toggleSelectMode() {
+        selectModeActive = !selectModeActive;
+        const btn = document.getElementById('toggleSelectBtn');
+        const header = document.getElementById('col-select-header');
+        const cells = document.querySelectorAll('[id^="col-select-"]');
+
+        if (selectModeActive) {
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-primary');
+            btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>İptal';
+            header.classList.remove('d-none');
+            cells.forEach(c => c.classList.remove('d-none'));
+        } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-secondary');
+            btn.innerHTML = '<i class="bi bi-check2-square me-1"></i>Seç';
+            header.classList.add('d-none');
+            cells.forEach(c => c.classList.add('d-none'));
+            // Uncheck all
+            document.querySelectorAll('.vehicle-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+        }
+    }
+
+    document.querySelectorAll('.col-toggle').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            let colClass = this.value;
+            let elements = document.querySelectorAll('.' + colClass);
+            elements.forEach(el => {
+                if(this.checked) {
+                    el.classList.remove('d-none');
+                } else {
+                    el.classList.add('d-none');
+                }
+            });
+        });
+    });
+
+    function updateExportColumns() {
+        let visibleCols = [];
+        document.querySelectorAll('.col-toggle').forEach(checkbox => {
+            if(checkbox.checked) {
+                visibleCols.push(checkbox.value);
+            }
+        });
+        document.getElementById('visibleColumnsInput').value = visibleCols.join(',');
+    }
+</script>
+{% endblock %}

@@ -271,30 +271,28 @@
 
         {% if fleet_notifications and not notifications_read %}
         document.addEventListener("DOMContentLoaded", function() {
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true,
-                background: '#fef2f2',
-                color: '#991b1b',
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            });
-            
-            let msg = "<div style='text-align:left; font-size: 0.9rem;'>";
+            let msg = "<div style='text-align:left; font-size: 0.95rem; margin-top: 15px; background: #fff1f2; padding: 15px; border-radius: 8px; border: 1px solid #ffe4e6; box-shadow: inset 4px 0 0 #e11d48;'>";
             {% for n in fleet_notifications %}
-                msg += "<strong>{{ n.plate }}</strong> - {{ n.issue }} ({{ n.days }} gün)<br>";
+                msg += "<div style='margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ffe4e6; last-child: border-0;'><i class='bi bi-exclamation-circle-fill text-danger me-2'></i><strong class='text-dark'>{{ n.plate }}</strong> <span class='text-muted mx-1'>|</span> <span class='text-secondary'>{{ n.issue }}</span> <span class='badge bg-danger rounded-pill float-end'>{{ n.days }} gün gecikti</span></div>";
             {% endfor %}
             msg += "</div>";
 
-            Toast.fire({
-                icon: 'error',
+            Swal.fire({
+                icon: 'warning',
+                iconColor: '#e11d48',
                 title: 'Dikkat! Günü Geçen İşlemler',
-                html: msg
+                html: msg,
+                position: 'center',
+                showConfirmButton: true,
+                confirmButtonText: '<i class="bi bi-check2-circle me-1"></i> Anladım',
+                confirmButtonColor: '#e11d48',
+                showCloseButton: true,
+                background: '#ffffff',
+                backdrop: `rgba(15, 23, 42, 0.6)`,
+                customClass: {
+                    title: 'fs-4 fw-bold text-dark',
+                    popup: 'rounded-4 shadow-lg border-0'
+                }
             });
         });
         {% endif %}

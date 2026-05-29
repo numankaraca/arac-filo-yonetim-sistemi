@@ -14,7 +14,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form method="post">
+        <form method="post" autocomplete="off">
             {% csrf_token %}
             <div class="row">
                 {% for field in form %}

@@ -143,7 +143,7 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center gap-3" href="{% url 'dashboard' %}">
-                <img src="{% static 'img/logo.png' %}" alt="Logo" height="45" class="d-inline-block align-top">
+                <img src="{% static 'img/logo.png' %}" alt="Göç İdaresi Başkanlığı" height="52" class="d-inline-block align-top" style="object-fit: contain; filter: brightness(0) opacity(0.8);">
                 <div class="d-flex flex-column" style="line-height: 1.2;">
                     <span class="fs-6 fw-bold text-dark">İstanbul İl Göç İdaresi</span>
                     <span class="fs-7 text-primary fw-semibold" style="font-size: 0.75rem;">Araç Yönetim Sistemi</span>
@@ -185,7 +185,9 @@
                 <!-- User Profile Dropdown -->
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle border-start ps-4" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--text-main);">
-                        <img src="{% static 'img/logo.png' %}" alt="Logo" style="width: 35px; height: 35px;">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width: 35px; height: 35px; font-size: 1rem; flex-shrink: 0;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
                         <div class="d-none d-lg-block">
                             <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Hoş geldiniz</small>
                             <span class="fw-bold" style="font-size: 0.9rem;">{{ user.username }}</span>
@@ -271,11 +273,17 @@
 
         {% if fleet_notifications and not notifications_read %}
         document.addEventListener("DOMContentLoaded", function() {
-            let msg = "<div style='text-align:left; font-size: 0.95rem; margin-top: 15px; background: #fff1f2; padding: 15px; border-radius: 8px; border: 1px solid #ffe4e6; box-shadow: inset 4px 0 0 #e11d48;'>";
+            let msg = "<div style='text-align:left; font-size: 0.95rem; margin-top: 15px; background: #fff1f2; padding: 15px; border-radius: 8px; border: 1px solid #ffe4e6; box-shadow: inset 4px 0 0 #e11d48; max-height: 300px; overflow-y: auto;'>";
+            msg += "<table class='table table-sm table-borderless mb-0 align-middle'>";
             {% for n in fleet_notifications %}
-                msg += "<div style='margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ffe4e6; last-child: border-0;'><i class='bi bi-exclamation-circle-fill text-danger me-2'></i><strong class='text-dark'>{{ n.plate }}</strong> <span class='text-muted mx-1'>|</span> <span class='text-secondary'>{{ n.issue }}</span> <span class='badge bg-danger rounded-pill float-end'>{{ n.days }} gün gecikti</span></div>";
+                msg += "<tr style='border-bottom: 1px solid #ffe4e6;'>";
+                msg += "<td style='width: 30px; text-align: center; padding: 10px 0;'><i class='bi bi-exclamation-circle-fill text-danger'></i></td>";
+                msg += "<td style='padding: 10px 8px;'><strong class='text-dark'>{{ n.plate }}</strong></td>";
+                msg += "<td style='padding: 10px 8px;'><span class='text-secondary'>{{ n.issue }}</span></td>";
+                msg += "<td style='padding: 10px 0; text-align: right;'><span class='badge bg-danger rounded-pill fw-normal' style='font-size:0.8rem; padding: 0.4em 0.8em;'>{{ n.days }} gün gecikti</span></td>";
+                msg += "</tr>";
             {% endfor %}
-            msg += "</div>";
+            msg += "</table></div>";
 
             Swal.fire({
                 icon: 'warning',
